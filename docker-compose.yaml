@@ -1,0 +1,8 @@
+version: '3'
+
+services:
+  rock-paper-scissors:
+    build: rock-paper-scissors
+    ports:
+      - 80:8090
+    restart: always
