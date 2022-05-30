@@ -1,5 +1,6 @@
 package io.ishan.rockpaperscissors.models;
 
+import java.io.Console;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -11,36 +12,39 @@ import io.ishan.rockpaperscissors.utils.Generator;
 import io.ishan.rockpaperscissors.utils.Move;
 
 public class Game implements IGame {
-    String id = "";
-    String winnerId = "";
-    String creatorId = "";
-    boolean started = false;
-    boolean ended = false;
-    String winnerName;
-    String WinnerId;
-    String WinnerScore;
-    HashMap<String, Player> players;
+    public String id = "";
+    public String winnerId = "";
+    public String creatorId = "";
+    public boolean started = false;
+    public boolean ended = false;
+    public String winnerName;
+    public String WinnerId;
+    public String WinnerScore;
+    public HashMap<String, Player> players;
 
     public String getId() {
         return this.id;
     }
 
-    public Map<String, String> createGame(String creatorName, int numberOfPlayers) {
+    public Map<String, String> createGame(String playerName, int numberOfPlayers) {
         String gameId = Generator.generateRandomPassword(10);
         this.id = gameId;
 
         this.players = new HashMap<String, Player>();
-        String userId = Generator.generateRandomPassword(10);
-        this.players.put(userId, new Player(userId, creatorName));
+        String playerId = Generator.generateRandomPassword(10);
+        this.creatorId = playerId;
+
+        this.players.put(playerId, new Player(playerId, playerName));
 
         Map<String, String> response = new HashMap<String, String>();
-        response.put("userId", userId);
+        response.put("playerId", playerId);
         response.put("gameId", this.id);
         return response;
     }
 
     public Map<String, String> startGame(String id) {
         Map<String, String> response = new HashMap<String, String>();
+        System.out.println(this.creatorId);
 
         if (id.equals(this.creatorId)) {
             this.started = true;
@@ -62,17 +66,27 @@ public class Game implements IGame {
     }
 
     public Map<String, String> playGame(String move, String playerId) {
-        Player player = players.get(playerId);
-        player.hasPlayed = true;
-        player.move = Move.valueOf(move.toLowerCase());
-
         Map<String, String> response = new HashMap<String, String>();
-        response.put("msg", "success");
-        response.put("msg", "success");
+
+        Player player = players.get(playerId);
+        if (!player.hasPlayed && !this.ended) {
+            player.hasPlayed = true;
+            player.move = Move.valueOf(move.toLowerCase());
+
+            response.put("msg", "successfully played " + move);
+            response.put("status", "success");
+
+        } else {
+            response.put("msg", "Either the game is ended or you have already used your move");
+            response.put("status", "error");
+        }
+
         return response;
     }
 
     public Map<String, String> endGame(String id) {
+        Map<String, String> response = new HashMap<String, String>();
+
         if (id.equals(this.creatorId)) {
             this.ended = true;
             for (Map.Entry<String, Player> me : players.entrySet()) {
@@ -88,15 +102,25 @@ public class Game implements IGame {
                 }
                 me.getValue().addScore(score);
             }
+            response.put("msg", "Ended the game!");
+            response.put("status", "success");
+        } else {
+            response.put("msg", "Only the creator can end the game!");
+            response.put("status", "error");
         }
-        Map<String, String> response = new HashMap<String, String>();
-        response.put("msg", "success");
-        response.put("msg", "success");
         return response;
     }
 
-    // public Map<String, String> generateresults() {
-    // for (Map.Entry<String, Player> other : players.entrySet()) {
-    // }
-    // }
+    public Map<String, String> generateresults() {
+        Map<String, String> response = new HashMap<String, String>();
+
+        if (this.started == false) {
+            response.put("msg", "The game has not yet started!");
+            response.put("status", "error");
+        } else {
+            for (Map.Entry<String, Player> other : players.entrySet()) {
+            }
+        }
+        return response;
+    }
 }
